@@ -1,4 +1,4 @@
-// Minimal local server for WriteLab. Requires Node.js 20+ and an OpenAI API key.
+// Minimal server for WriteLab. Requires Node.js 20+ and a Gemini API key.
 // The API key stays on the server and is never sent to the browser.
 const http = require('node:http');
 const fs = require('node:fs');
@@ -6,8 +6,8 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 
 const PORT = Number(process.env.PORT || 3000);
-const API_KEY = process.env.OPENAI_API_KEY;
-const MODEL = process.env.OPENAI_MODEL || 'gpt-6-luna';
+const API_KEY = process.env.GEMINI_API_KEY;
+const MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
 const CLASS_ACCESS_CODE = process.env.CLASS_ACCESS_CODE || '';
 const PER_IP_HOURLY_LIMIT = Number(process.env.PER_IP_HOURLY_LIMIT || 5);
 const DAILY_REVIEW_LIMIT = Number(process.env.DAILY_REVIEW_LIMIT || 100);
@@ -30,7 +30,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === 'POST' && url.pathname === '/api/review') {
-    if (!API_KEY) return sendJson(res, 503, { error: 'AI review is not configured yet. Add OPENAI_API_KEY to your environment and restart the app.' });
+    if (!API_KEY) return sendJson(res, 503, { error: 'AI review is not configured yet. Add GEMINI_API_KEY to your Render environment and redeploy.' });
     try {
       const body = await readJson(req);
       if (CLASS_ACCESS_CODE && !safeEqual(String(body.classCode || ''), CLASS_ACCESS_CODE)) {
@@ -81,25 +81,22 @@ ${JSON.stringify(assignment, null, 2)}
 STUDENT TEXT:
 ${essay}`;
 
-      const apiResponse = await fetch('https://api.openai.com/v1/responses', {
+      const apiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
+        headers: { 'x-goog-api-key': API_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: MODEL,
-          input: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-          ],
-          max_output_tokens: 6500
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.2, maxOutputTokens: 6500 }
         })
       });
       const apiData = await apiResponse.json().catch(() => ({}));
       if (!apiResponse.ok) {
-        const detail = apiData.error && apiData.error.message ? apiData.error.message : `API request failed (${apiResponse.status}).`;
+        const detail = apiData.error && apiData.error.message ? apiData.error.message : `Gemini API request failed (${apiResponse.status}).`;
         return sendJson(res, 502, { error: detail });
       }
       const outputText = getOutputText(apiData);
-      if (!outputText) return sendJson(res, 502, { error: 'The AI service returned an empty review.' });
+      if (!outputText) return sendJson(res, 502, { error: 'Gemini returned an empty review. Please try again.' });
       const review = parseJson(outputText);
       if (!review || !Number.isFinite(Number(review.grade)) || !Array.isArray(review.criteria)) {
         return sendJson(res, 502, { error: 'The AI service returned feedback in an unexpected format. Please try again.' });
@@ -184,11 +181,10 @@ function readJson(req) {
   });
 }
 function getOutputText(data) {
-  if (typeof data.output_text === 'string') return data.output_text;
   const chunks = [];
-  for (const item of (data.output || [])) {
-    for (const content of (item.content || [])) {
-      if (content.type === 'output_text' && typeof content.text === 'string') chunks.push(content.text);
+  for (const candidate of (data.candidates || [])) {
+    for (const part of ((candidate.content && candidate.content.parts) || [])) {
+      if (typeof part.text === 'string') chunks.push(part.text);
     }
   }
   return chunks.join('\n').trim();
@@ -200,5 +196,5 @@ function parseJson(text) {
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`WriteLab is listening on port ${PORT}`);
-  if (!API_KEY) console.log('AI review is not configured. Set OPENAI_API_KEY and restart to enable it.');
+  if (!API_KEY) console.log('AI review is not configured. Set GEMINI_API_KEY in the hosting environment to enable it.');
 });

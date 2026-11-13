@@ -25,8 +25,8 @@ This project is designed to be deployed as **one Render web service**. Render se
    - **Start Command:** `npm start`
    - **Instance type:** Free, if available and suitable
 5. Under **Environment Variables**, add:
-   - `OPENAI_API_KEY` = the private API key created/managed by the teacher or parent
-   - `OPENAI_MODEL` = `gpt-6-luna`
+   - `GEMINI_API_KEY` = the private Gemini API key created and managed by the teacher or parent
+   - `GEMINI_MODEL` = `gemini-3.5-flash` (default; change only to a model enabled for your Gemini API key)
    - `CLASS_ACCESS_CODE` = a class-only code chosen by the teacher (not a personal password)
    - Optional `DAILY_REVIEW_LIMIT` = `100`
    - Optional `PER_IP_HOURLY_LIMIT` = `5`
@@ -41,16 +41,16 @@ When you upload a changed file to the same GitHub repository and commit it, Rend
 
 ## Important safety, privacy and cost notes
 
-- **Adult setup:** An adult (teacher or parent) should own the hosting account, create/manage the API key and review billing. API use may cost money; set a spending limit/budget in the API provider dashboard where available. ChatGPT subscriptions and API billing are separate.
-- **Keep the key private:** Put `OPENAI_API_KEY` only in Render's Environment settings. Never paste it into `index.html`, GitHub, a screenshot or a class chat.
+- **Adult setup:** An adult (teacher or parent) should own the hosting account, create/manage the API key and review billing. API use may cost money; set a spending limit/budget in the Google AI Studio usage dashboard where available. ChatGPT subscriptions and API billing are separate.
+- **Keep the key private:** Put `GEMINI_API_KEY` only in Render's Environment settings. Never paste it into `index.html`, GitHub, a screenshot or a class chat.
 - **Class access code:** The optional class code is checked by the server. Students need it to submit writing. It is not a replacement for strong abuse controls, so the server also applies basic per-IP hourly and whole-app daily limits. These counters are in memory and reset when the service restarts; they are lightweight safeguards, not a guarantee against all abuse.
-- **Student privacy:** Tell students that their submitted text is sent to the configured AI service for feedback. They should not include full names, email addresses, phone numbers, school IDs or other personal/sensitive information. The app does not intentionally save submitted essays to a database. The hosting provider and AI provider may process request data under their own terms and retention settings; the teacher should review those before classroom use.
+- **Student privacy:** Tell students that their submitted text is sent to Google Gemini for feedback. Google’s Gemini API free tier may use submitted content to improve Google products; the teacher should review the current data terms and school policy before using real student work. They should not include full names, email addresses, phone numbers, school IDs or other personal/sensitive information. The app does not intentionally save submitted essays to a database. The hosting provider and AI provider may process request data under their own terms and retention settings; the teacher should review those before classroom use.
 - **Free hosting:** Free hosting plans can sleep when unused, have usage limits and may change. The first visit after inactivity can take longer. Check current Render plan details before relying on it for a lesson.
 - **Grades:** The 1–5 grade is an AI-generated practice estimate, not an official Matura result or a teacher's grade.
 
 ## Local development (optional)
 
-Requires Node.js 20+. Set `OPENAI_API_KEY`, then run `npm start` and open http://localhost:3000.
+Requires Node.js 20+. Set `GEMINI_API_KEY`, then run `npm start` and open http://localhost:3000.
 
 ## Contents
 
