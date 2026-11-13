@@ -209,13 +209,17 @@
         <p class="panel-sub">Write directly here or paste a text you have already written.</p>
       </div>
       <div class="panel-body">
+        <label class="field" style="margin-bottom:15px">
+          <span class="field-label">Class access code</span>
+          <input id="classCode" type="password" autocomplete="off" placeholder="Enter the code your teacher shared" style="width:100%;border:1px solid #dedeea;border-radius:10px;padding:12px 13px;font:inherit">
+        </label>
         <div class="editor-meta">
           <span class="field-label" style="margin:0">Writing area</span>
           <span class="word-count"><strong id="wordCount">0</strong> words</span>
         </div>
         <textarea id="essayInput" maxlength="14000" spellcheck="true" placeholder="Start writing here…&#10;&#10;Tip: Make sure you address every bullet point in the assignment."></textarea>
         <div class="editor-actions">
-          <div class="editor-hint">Your writing is sent to the configured AI service for feedback.<br>Do not include personal or sensitive information.</div>
+          <div class="editor-hint">Your writing is sent to the AI service for feedback.<br>Do not include names or personal information.</div>
           <button class="primary review-btn" id="reviewBtn">Review my writing ↗</button>
         </div>
         <div id="status" class="status" role="status"></div>
@@ -467,7 +471,7 @@
     try {
       const response = await fetch('/api/review', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ text, assignment:currentAssignment })
+        body:JSON.stringify({ text, assignment:currentAssignment, classCode:$('classCode').value.trim() })
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || `Review failed (${response.status}).`);
@@ -476,7 +480,7 @@
       setStatus('Review complete. Use the corrections as a guide and try revising your original text.');
     } catch (error) {
       setStatus(error.message.includes('Failed to fetch')
-        ? 'The AI review service is not running. Follow the README to start the local app and connect your API key.'
+        ? 'WriteLab could not reach its review service. Please refresh the page and try again. If it keeps happening, tell your teacher.'
         : error.message, true);
     } finally {
       $('reviewBtn').disabled = false;

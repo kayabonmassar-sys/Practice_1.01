@@ -1,0 +1,12 @@
+{
+  "name": "writelab-matura-writing-practice",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AHS B2 Matura English writing practice app",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
