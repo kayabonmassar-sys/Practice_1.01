@@ -25,6 +25,23 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, 200, { ok: true, aiConfigured: Boolean(API_KEY) });
   }
 
+  if (req.method === 'GET' && url.pathname === '/api/access-status') {
+    return sendJson(res, 200, { required: Boolean(CLASS_ACCESS_CODE) });
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/access') {
+    try {
+      const body = await readJson(req);
+      if (CLASS_ACCESS_CODE && !safeEqual(String(body.classCode || ''), CLASS_ACCESS_CODE)) {
+        return sendJson(res, 401, { error: 'That class access code is not correct. Please check it with your teacher.' });
+      }
+      return sendJson(res, 200, { ok: true });
+    } catch (error) {
+      const status = error && error.message === 'Request body too large' ? 413 : 400;
+      return sendJson(res, status, { error: error.message || 'Unable to check the class access code.' });
+    }
+  }
+
   if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
     return sendFile(res, path.join(ROOT, 'index.html'), 'text/html; charset=utf-8');
   }

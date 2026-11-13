@@ -10,6 +10,7 @@ KGB is a browser-based English writing practice app for 8th-class AHS students. 
 - AI assessment against the four Austrian B2 writing dimensions.
 - Four selectable themes: Default (classic Facebook / iOS 4), Super kawaii Y2K, Frutiger Aero / Windows Vista and Cyberpunk.
 - Theme choice is saved locally in the user's browser.
+- Optional class password window: when `CLASS_ACCESS_CODE` is set on Render, students must enter the teacher-provided code before using KGB. The code is checked by the server and is sent with both transcription and review requests.
 - Handwritten essay upload: choose up to five page photos, transcribe them into editable text, proofread the transcription, and then submit it for the usual review.
 - The transcription step preserves the student's original language and wording; it does not translate or correct the essay.
 
@@ -28,7 +29,7 @@ Keep the existing Render environment variables, especially `GEMINI_API_KEY`, `GE
 
 - `GEMINI_API_KEY`: required; store it only in Render's private Environment settings.
 - `GEMINI_MODEL`: the Gemini model identifier already configured for the working app. If unset, the server uses its existing fallback.
-- `CLASS_ACCESS_CODE`: optional server-side class code.
+- `CLASS_ACCESS_CODE`: optional server-side class code. When set, KGB displays its password window on opening and validates the code before unlocking the app. Leave it unset to make the app publicly accessible.
 - `DAILY_REVIEW_LIMIT`: optional, defaults to 100 AI requests per day.
 - `PER_IP_HOURLY_LIMIT`: optional, defaults to 5 AI requests per IP per hour.
 

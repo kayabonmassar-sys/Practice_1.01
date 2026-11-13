@@ -266,18 +266,46 @@
     body[data-theme="cyberpunk"] .grade-circle { color:#06111a; background:linear-gradient(135deg,#00e5ff,#5dffba); }
     @media(max-width:650px) { .header-tools { gap:6px; flex-wrap:wrap; justify-content:flex-end; } #themeSelect { min-width:150px; max-width:190px; } .top-tag { display:none; } .upload-actions { align-items:flex-start; flex-direction:column; } }
 
+
+    /* Class access-code welcome window */
+    .access-overlay { position:fixed; inset:0; z-index:9999; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(12,20,34,.68); backdrop-filter:blur(5px); }
+    .access-overlay.show { display:flex; }
+    .access-window { width:min(100%,430px); padding:26px; background:var(--card,#fff); color:var(--ink,#202039); border:1px solid var(--line,#ddd); border-radius:16px; box-shadow:0 24px 80px rgba(0,0,0,.3); }
+    .access-mark { width:42px; height:42px; display:grid; place-items:center; margin-bottom:15px; border-radius:12px; background:var(--mint,#baf1d7); color:#17243a; font-weight:950; font-size:20px; }
+    .access-window h2 { margin:0 0 8px; font-size:23px; }
+    .access-window p { margin:0 0 18px; color:var(--muted,#667); font-size:13px; line-height:1.55; }
+    .access-window input { display:block; width:100%; padding:13px 14px; margin:0 0 12px; border:1px solid var(--line,#ddd); border-radius:9px; background:#fff; color:#202039; font:inherit; outline:none; }
+    .access-window input:focus { border-color:var(--purple,#6962d9); box-shadow:0 0 0 3px rgba(105,98,217,.14); }
+    .access-window button { width:100%; }
+    .access-error { min-height:18px; margin:9px 0 0 !important; color:#bd424b !important; font-size:12px !important; }
+    body.access-locked { overflow:hidden; }
+    body[data-theme="cyberpunk"] .access-window { background:#10182a; color:#e7e9ff; border-color:#34365c; }
+    body[data-theme="cyberpunk"] .access-window p { color:#b4b8d7; }
+    body[data-theme="cyberpunk"] .access-window input { background:#0c1022; color:#e7e9ff; border-color:#4a4c78; }
+    @media(max-width:520px) { .access-window { padding:22px; border-radius:12px; } }
   </style>
 </head>
 <body>
+  <div class="access-overlay" id="accessOverlay" role="dialog" aria-modal="true" aria-labelledby="accessTitle">
+    <form class="access-window" id="accessForm">
+      <div class="access-mark" aria-hidden="true">K</div>
+      <h2 id="accessTitle">Welcome to KGB</h2>
+      <p>This class space is password-protected. Enter the access code shared by your teacher to continue.</p>
+      <label class="field-label" for="accessCodeInput">Class access code</label>
+      <input id="accessCodeInput" type="password" autocomplete="current-password" placeholder="Enter your class code" required>
+      <button class="primary" id="accessSubmit" type="submit">Unlock KGB ↗</button>
+      <p class="access-error" id="accessError" role="alert" aria-live="polite"></p>
+    </form>
+  </div>
   <header class="topbar">
     <div class="brand"><span class="brand-mark">K</span> KGB</div>
     <div class="header-tools">
       <label class="theme-label" for="themeSelect">Theme</label>
       <select id="themeSelect" aria-label="Choose appearance theme">
-        <option value="default">Default</option>
-        <option value="kawaii">Kawaii</option>
-        <option value="aero">Niche Frutiger Aero</option>
-        <option value="cyberpunk">Samurai</option>
+        <option value="default">Default · Facebook / iOS 4</option>
+        <option value="kawaii">Super kawaii Y2K</option>
+        <option value="aero">Frutiger Aero · Windows Vista</option>
+        <option value="cyberpunk">Cyberpunk</option>
       </select>
       <div class="top-tag">AHS · English · B2 writing</div>
     </div>
@@ -285,10 +313,10 @@
   <main>
     <section class="intro">
       <div>
-        <p class="eyebrow">Kaya's greatest Bildungsbegleiter</p>
-        <h1>Appease the system.<br>One text at a time.</h1>
-        <p class="tagline">I absolutely made this all by myself. Why would I deceive you?</p>
-        <p>Generate a realistic writing task, write your response, and get detailed feedback on content, structure, vocabulary and grammar. GLG Kaya :P</p>
+        <p class="eyebrow">Your Matura writing gym</p>
+        <h1>Write better.<br>One text at a time.</h1>
+        <p class="tagline">“definitely not vibecoded at all trust me I’m super smart and can write html code”</p>
+        <p>Generate a realistic writing task, write your response, and get detailed feedback on content, structure, vocabulary and grammar.</p>
       </div>
       <div class="level-pill">8th class AHS · B2</div>
     </section>
@@ -417,6 +445,7 @@
   let mode = 'practice';
   let currentAssignment = null;
   let latestCorrectedText = '';
+  let classAccessCode = '';
 
 
   // Theme preference is stored locally on this device.
@@ -432,6 +461,54 @@
   try { savedTheme = localStorage.getItem('kgb-theme') || 'default'; } catch (_) {}
   applyTheme(savedTheme);
   themeSelect.addEventListener('change', () => applyTheme(themeSelect.value));
+
+  // Ask the server whether this class has an access code configured.
+  async function initialiseAccessGate() {
+    const overlay = $('accessOverlay');
+    try {
+      const response = await fetch('/api/access-status');
+      if (!response.ok) throw new Error('Could not check the class access settings.');
+      const data = await response.json();
+      if (!data.required) return;
+      overlay.classList.add('show');
+      document.body.classList.add('access-locked');
+      $('accessCodeInput').focus();
+    } catch (error) {
+      overlay.classList.add('show');
+      document.body.classList.add('access-locked');
+      $('accessTitle').textContent = 'KGB is temporarily unavailable';
+      $('accessError').textContent = 'Could not contact the access service. Refresh the page or ask your teacher for help.';
+      $('accessCodeInput').disabled = true;
+      $('accessSubmit').disabled = true;
+    }
+  }
+
+  $('accessForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const code = $('accessCodeInput').value.trim();
+    if (!code) { $('accessError').textContent = 'Please enter the class access code.'; return; }
+    const submit = $('accessSubmit');
+    submit.disabled = true; submit.textContent = 'Checking…';
+    $('accessError').textContent = '';
+    try {
+      const response = await fetch('/api/access', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ classCode:code })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'That access code is not correct.');
+      classAccessCode = code;
+      $('accessOverlay').classList.remove('show');
+      document.body.classList.remove('access-locked');
+      $('essayInput').focus({ preventScroll:true });
+    } catch (error) {
+      $('accessError').textContent = error.message || 'That access code is not correct. Please try again.';
+      $('accessCodeInput').select();
+    } finally {
+      submit.disabled = false; submit.textContent = 'Unlock KGB ↗';
+    }
+  });
+  initialiseAccessGate();
 
   const topics = {
     school: [
@@ -663,7 +740,7 @@
       for (const file of files) images.push({ mimeType:'image/jpeg', data: await imageFileToJpeg(file) });
       const response = await fetch('/api/transcribe', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ images })
+        body:JSON.stringify({ images, classCode:classAccessCode })
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || `Transcription failed (${response.status}).`);
@@ -691,7 +768,7 @@
     try {
       const response = await fetch('/api/review', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ text, assignment:currentAssignment })
+        body:JSON.stringify({ text, assignment:currentAssignment, classCode:classAccessCode })
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || `Review failed (${response.status}).`);
