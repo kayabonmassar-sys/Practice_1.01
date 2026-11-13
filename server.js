@@ -1,4 +1,4 @@
-// Minimal server for WriteLab. Requires Node.js 20+ and a Gemini API key.
+// Minimal server for KGB (Kaya’s greatest Bildungsbegleiter). Requires Node.js 20+ and a Gemini API key.
 // The API key stays on the server and is never sent to the browser.
 const http = require('node:http');
 const fs = require('node:fs');
@@ -7,7 +7,7 @@ const crypto = require('node:crypto');
 
 const PORT = Number(process.env.PORT || 3000);
 const API_KEY = process.env.GEMINI_API_KEY;
-const MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+const MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 const CLASS_ACCESS_CODE = process.env.CLASS_ACCESS_CODE || '';
 const PER_IP_HOURLY_LIMIT = Number(process.env.PER_IP_HOURLY_LIMIT || 5);
 const DAILY_REVIEW_LIMIT = Number(process.env.DAILY_REVIEW_LIMIT || 100);
@@ -15,7 +15,7 @@ const reviewByIp = new Map();
 let dailyCount = 0;
 let dailyWindow = new Date().toISOString().slice(0, 10);
 const ROOT = __dirname;
-const MAX_BODY = 70 * 1024;
+const MAX_BODY = 12 * 1024 * 1024; // Allows up to five compressed page photos.
 
 const server = http.createServer(async (req, res) => {
   setSecurityHeaders(res);
@@ -27,6 +27,53 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
     return sendFile(res, path.join(ROOT, 'index.html'), 'text/html; charset=utf-8');
+  }
+
+  if (url.pathname === '/api/transcribe' && req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return sendJson(res, 405, { error: 'The handwriting endpoint requires a POST request.' });
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/transcribe') {
+    if (!API_KEY) return sendJson(res, 503, { error: 'Handwriting transcription is not configured. Ask the teacher to check the Gemini API setup.' });
+    try {
+      const body = await readJson(req);
+      if (CLASS_ACCESS_CODE && !safeEqual(String(body.classCode || ''), CLASS_ACCESS_CODE)) {
+        return sendJson(res, 401, { error: 'That class access code is not correct. Please check it with your teacher.' });
+      }
+      const limitResult = checkRateLimit(req);
+      if (!limitResult.ok) return sendJson(res, 429, { error: limitResult.message });
+      const images = Array.isArray(body.images) ? body.images : [];
+      if (!images.length || images.length > 5) return sendJson(res, 400, { error: 'Please upload between 1 and 5 page photos.' });
+      const parts = [{ text: `Transcribe the handwritten essay in these page photos into plain editable text. The images are supplied in page order. Preserve the original language, wording, spelling, punctuation, paragraph breaks and headings as accurately as possible. Do NOT translate, summarise, rewrite, improve grammar or silently correct mistakes: the student's original language must be preserved for assessment. If a word is genuinely unreadable, write [unclear] at that point. Do not describe the images or add commentary. Return only the transcription.` }];
+      for (const image of images) {
+        if (!image || !['image/jpeg','image/png','image/webp'].includes(image.mimeType) || typeof image.data !== 'string' || !image.data || image.data.length > 5 * 1024 * 1024 || !/^[A-Za-z0-9+/]+={0,2}$/.test(image.data)) {
+          return sendJson(res, 400, { error: 'One of the page images is invalid or too large. Please try a smaller JPG, PNG or WebP photo.' });
+        }
+        parts.push({ inlineData: { mimeType: image.mimeType, data: image.data } });
+      }
+      const apiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`, {
+        method: 'POST',
+        headers: { 'x-goog-api-key': API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { temperature: 0.1, maxOutputTokens: 7000 } })
+      });
+      const apiData = await apiResponse.json().catch(() => ({}));
+      if (!apiResponse.ok) {
+        const detail = apiData.error && apiData.error.message ? apiData.error.message : `Gemini transcription failed (${apiResponse.status}).`;
+        return sendJson(res, 502, { error: detail });
+      }
+      const text = getOutputText(apiData);
+      if (!text) return sendJson(res, 502, { error: 'Gemini could not read any text from those photos. Try clearer, well-lit pictures.' });
+      return sendJson(res, 200, { text });
+    } catch (error) {
+      const status = error && error.message === 'Request body too large' ? 413 : 400;
+      return sendJson(res, status, { error: error.message || 'Unable to transcribe the page photos.' });
+    }
+  }
+
+  if (url.pathname === '/api/review' && req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return sendJson(res, 405, { error: 'The review endpoint requires a POST request. Please use the KGB app rather than opening this URL directly.' });
   }
 
   if (req.method === 'POST' && url.pathname === '/api/review') {
@@ -195,6 +242,6 @@ function parseJson(text) {
 }
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`WriteLab is listening on port ${PORT}`);
+  console.log(`KGB is listening on port ${PORT}`);
   if (!API_KEY) console.log('AI review is not configured. Set GEMINI_API_KEY in the hosting environment to enable it.');
 });

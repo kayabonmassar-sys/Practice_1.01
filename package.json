@@ -1,12 +1,8 @@
 {
-  "name": "writelab-matura-writing-practice",
-  "version": "1.0.0",
+  "name": "kgb-bildungsbegleiter",
+  "version": "1.1.0",
   "private": true,
-  "description": "AHS B2 Matura English writing practice app",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "engines": {
-    "node": ">=20"
-  }
+  "description": "Kaya’s greatest Bildungsbegleiter — Austrian AHS B2 Matura English writing practice",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=20" }
 }

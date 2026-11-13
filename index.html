@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#17172b">
-  <title>WriteLab — Matura Writing Practice</title>
+  <meta name="theme-color" content="#3b5998">
+  <title>KGB — Kaya’s greatest Bildungsbegleiter</title>
   <style>
     :root {
       --ink: #202039;
@@ -125,18 +125,169 @@
     .modal-note { margin-top:13px; border-top:1px solid var(--line); padding-top:13px; color:var(--muted); font-size:10px; line-height:1.55; }
     @media (max-width: 820px) { .layout { grid-template-columns:1fr; } .intro { align-items:flex-start; flex-direction:column; } .level-pill { align-self:flex-start; } }
     @media (max-width: 520px) { main { padding:28px 14px 48px; } .topbar { padding:14px; } .top-tag { display:none; } .panel-head,.panel-body,.results-body { padding-left:17px; padding-right:17px; } .assignment { padding:18px; } .assignment h3 { font-size:23px; } .two-col { grid-template-columns:1fr; } .editor-actions { align-items:stretch; flex-direction:column; } .review-btn { width:100%; } .results-head { padding:17px; } }
+
+    /* KGB: classic 2008 social-web / iOS 4-inspired palette */
+    :root {
+      --ink: #24344d;
+      --muted: #66758a;
+      --paper: #e9edf4;
+      --card: #ffffff;
+      --line: #cbd5e2;
+      --purple: #3b5998;
+      --purple-dark: #294875;
+      --mint: #b9e6c5;
+      --peach: #ffe2cf;
+      --yellow: #fff2b8;
+      --red: #bd424b;
+      --shadow: 0 2px 7px rgba(29, 55, 91, .13);
+      font-family: "Lucida Grande", Tahoma, Verdana, Arial, sans-serif;
+    }
+    body { background:linear-gradient(#f5f7fa 0, #e7ecf3 220px, #e7ecf3 100%); }
+    .topbar {
+      background:linear-gradient(#6d88b7 0%, #4e6c9f 48%, #3b5998 100%);
+      border-bottom:1px solid #263f69;
+      box-shadow:0 2px 5px rgba(25,45,75,.22);
+    }
+    .brand { letter-spacing:-.035em; text-shadow:0 1px 1px rgba(0,0,0,.25); }
+    .brand-mark {
+      border-radius:4px; color:#fff;
+      background:linear-gradient(#8bc2e8,#4b82b8);
+      border:1px solid rgba(255,255,255,.55);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.55);
+    }
+    .top-tag { color:#e2eaf6; letter-spacing:.08em; }
+    main { padding-top:34px; }
+    .eyebrow,.step { color:#3b5998; }
+    h1,h2,.assignment h3 { color:#263b5a; }
+    .level-pill {
+      border:1px solid #a9c9b0; background:linear-gradient(#f4fff5,#d8efdc);
+      color:#28613b; border-radius:4px; box-shadow:inset 0 1px 0 #fff;
+    }
+    .panel {
+      border:1px solid #c5d0df; border-radius:5px;
+      box-shadow:0 2px 5px rgba(35,58,89,.12);
+    }
+    .panel-head { background:linear-gradient(#fff,#f0f3f8); border-bottom:1px solid #cbd5e2; }
+    .panel-head h2 { letter-spacing:-.02em; }
+    select,textarea {
+      border:1px solid #aebdd0; border-radius:3px;
+      box-shadow:inset 0 1px 2px rgba(30,55,85,.08);
+    }
+    select:focus,textarea:focus { border-color:#5d83b7; box-shadow:0 0 0 2px rgba(77,126,184,.15); }
+    .segmented { gap:5px; }
+    .segmented button,.secondary {
+      border:1px solid #b7c4d4; border-radius:4px;
+      background:linear-gradient(#fff,#e8edf4); color:#3b506e;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.9);
+    }
+    .segmented button.active {
+      border-color:#34568b; color:#fff;
+      background:linear-gradient(#7897c4,#3b5998);
+      text-shadow:0 1px 1px rgba(0,0,0,.2);
+    }
+    .primary {
+      border:1px solid #2d6840; border-radius:4px;
+      background:linear-gradient(#8bcf91 0%,#55a965 48%,#38894d 100%);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 1px 2px rgba(25,65,40,.22);
+      text-shadow:0 1px 1px rgba(0,0,0,.2);
+    }
+    .primary:hover { background:linear-gradient(#9bd99f,#479a59); transform:none; }
+    .secondary:hover { border-color:#8299b8; background:linear-gradient(#fff,#dfe8f3); }
+    .empty-icon { border-radius:5px; background:#e5edf8; color:#3b5998; }
+    .type-chip {
+      color:#294875; background:#e4ebf6; border:1px solid #c4d1e4; border-radius:4px;
+    }
+    .word-chip { color:#28613b; background:#e4f3e7; border:1px solid #c1dfc7; border-radius:4px; }
+    .situation { border-left-color:#65a873; color:#53657d; }
+    .task-list li::before { border-radius:1px; background:#4f75ad; }
+    .format-tip { border:1px solid #c6d8c9; border-radius:4px; background:#edf7ee; color:#45644a; }
+    .format-tip b { color:#2e5737; }
+    .status { border:1px solid #bfd0e5; border-radius:4px; background:#eaf1fa; color:#31547f; }
+    .status.error { border-color:#e2bfc1; background:#fff0f0; color:#9b3942; }
+    .grade-circle { border-radius:7px; background:linear-gradient(#d9f2dd,#9bd4a5); color:#28613b; border:1px solid #9dcba6; }
+    .grade-circle.grade-2 { background:#e7f3df; }
+    .grade-circle.grade-3 { background:#fff4c9; }
+    .grade-circle.grade-4 { background:#ffe8d8; }
+    .grade-circle.grade-5 { background:#ffe0e2; }
+    .bar { border-radius:2px; background:#e3e9f1; }
+    .bar span { border-radius:2px; background:linear-gradient(#7ea2d0,#3b5998); }
+    .highlight-box,.issue,.list-card { border-radius:4px; border-color:#d0d9e5; }
+    .list-card { background:#f5f7fa; }
+    .corrected { background:#f2f7f3; }
+    .footer-note a { color:#3b5998; }
+    @media (max-width:520px) {
+      .topbar { padding:14px; }
+      .panel-head { background:linear-gradient(#fff,#f0f3f8); }
+    }
+
+    /* KGB identity and theme controls */
+    .header-tools { display:flex; align-items:center; gap:10px; }
+    .theme-label { color:#e2eaf6; font-size:11px; font-weight:800; }
+    #themeSelect { width:auto; min-width:190px; padding:8px 10px; font-size:11px; border-radius:4px; }
+    .tagline { font-weight:800; color:#3b5998 !important; font-size:13px !important; }
+    .upload-box { margin-top:14px; padding:14px; border:1px dashed #9db3ce; border-radius:5px; background:#f4f7fb; }
+    .upload-copy { display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+    .upload-copy strong { color:var(--ink); font-size:12px; }
+    .upload-copy span { color:var(--muted); font-size:11px; line-height:1.45; }
+    #essayImages { display:block; width:100%; font-size:11px; color:var(--muted); }
+    .upload-actions { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:10px; }
+    #transcribeBtn { white-space:nowrap; }
+    #transcribeBtn:disabled { opacity:.6; cursor:wait; }
+    body[data-theme="kawaii"] { --ink:#533d68; --muted:#88739a; --paper:#fff0fa; --card:#fffaff; --line:#efcce8; --purple:#d66bb8; --purple-dark:#a94b91; --mint:#b7e9f5; --shadow:0 8px 24px rgba(191,105,173,.14); font-family:"Trebuchet MS",Verdana,sans-serif; background:linear-gradient(135deg,#fff0f8,#eaf7ff 55%,#f3edff); }
+    body[data-theme="kawaii"] .topbar { background:linear-gradient(#f6a9d9,#b68be5); border:0; }
+    body[data-theme="kawaii"] .brand-mark { background:linear-gradient(#fff,#c7f3ff); color:#a94b91; border-radius:12px; }
+    body[data-theme="kawaii"] .panel { border-radius:18px; border:2px solid #f1c9e8; box-shadow:0 7px 20px rgba(190,117,183,.13); }
+    body[data-theme="kawaii"] .panel-head { background:linear-gradient(#fffaff,#fceafa); }
+    body[data-theme="kawaii"] .primary { background:linear-gradient(#f5a5d8,#c66bd0); border:1px solid #bd70bd; border-radius:18px; }
+    body[data-theme="kawaii"] .secondary, body[data-theme="kawaii"] select, body[data-theme="kawaii"] textarea { border-radius:12px; }
+    body[data-theme="kawaii"] .upload-box { background:#fff5fc; border-color:#e7a8d7; border-radius:14px; }
+    body[data-theme="aero"] { --ink:#16435a; --muted:#547b8d; --paper:#d8eef4; --card:rgba(255,255,255,.84); --line:#9ccbd8; --purple:#1687b0; --purple-dark:#075f88; --mint:#b5e9c2; --shadow:0 8px 24px rgba(27,104,130,.18); font-family:"Segoe UI",Tahoma,sans-serif; background:linear-gradient(160deg,#e9fbff 0%,#c8e9f3 42%,#e1f3df 100%); }
+    body[data-theme="aero"] .topbar { background:linear-gradient(180deg,rgba(176,231,250,.96),rgba(32,125,174,.95) 48%,rgba(12,77,126,.98)); border-bottom:1px solid #1c6c95; box-shadow:0 3px 12px rgba(18,90,125,.25); }
+    body[data-theme="aero"] .brand-mark { background:linear-gradient(#fff,#a8e9ff 48%,#329bd0); border:1px solid #d8f8ff; color:#07527a; border-radius:8px; }
+    body[data-theme="aero"] .panel { background:rgba(255,255,255,.78); border:1px solid rgba(91,170,195,.75); border-radius:13px; box-shadow:inset 0 1px 0 #fff,0 7px 18px rgba(24,100,125,.16); backdrop-filter:blur(8px); }
+    body[data-theme="aero"] .panel-head { background:linear-gradient(rgba(255,255,255,.94),rgba(210,241,249,.8)); }
+    body[data-theme="aero"] .primary { background:linear-gradient(#a9e8a9,#45a96d 52%,#197a68); border:1px solid #398d72; border-radius:7px; }
+    body[data-theme="aero"] .secondary, body[data-theme="aero"] select { background:linear-gradient(#fff,#dff5fa); border:1px solid #8bbfce; border-radius:7px; }
+    body[data-theme="aero"] .upload-box { background:rgba(222,248,250,.8); border-color:#83c4d4; border-radius:10px; }
+    body[data-theme="cyberpunk"] { --ink:#e7e9ff; --muted:#a3a7c8; --paper:#090b18; --card:#12152a; --line:#34365c; --purple:#00e5ff; --purple-dark:#ff4fd8; --mint:#123f4b; --peach:#4b203e; --yellow:#4b4218; --shadow:0 0 18px rgba(0,229,255,.10); font-family:Consolas,"Courier New",monospace; background:radial-gradient(ellipse at top,#202044,#090b18 62%); }
+    body[data-theme="cyberpunk"] .topbar { background:linear-gradient(90deg,#17102e,#101d36); border-bottom:1px solid #00d9ef; box-shadow:0 2px 18px rgba(0,229,255,.18); }
+    body[data-theme="cyberpunk"] .brand-mark { color:#09111d; background:linear-gradient(135deg,#00e5ff,#ff4fd8); border-radius:2px; }
+    body[data-theme="cyberpunk"] .top-tag, body[data-theme="cyberpunk"] .theme-label { color:#83f4ff; }
+    body[data-theme="cyberpunk"] .panel { background:#12152a; border:1px solid #41436e; border-radius:2px; box-shadow:0 0 14px rgba(0,229,255,.08); }
+    body[data-theme="cyberpunk"] .panel-head { background:linear-gradient(90deg,#1c1b3d,#151c32); border-bottom:1px solid #41436e; }
+    body[data-theme="cyberpunk"] h1, body[data-theme="cyberpunk"] h2, body[data-theme="cyberpunk"] .assignment h3 { color:#e9eaff; }
+    body[data-theme="cyberpunk"] .eyebrow, body[data-theme="cyberpunk"] .step, body[data-theme="cyberpunk"] .tagline { color:#00e5ff !important; }
+    body[data-theme="cyberpunk"] .primary { color:#080b18; background:linear-gradient(90deg,#00e5ff,#7c6bff); border:1px solid #00e5ff; border-radius:2px; box-shadow:0 0 12px rgba(0,229,255,.2); text-shadow:none; }
+    body[data-theme="cyberpunk"] .secondary, body[data-theme="cyberpunk"] select, body[data-theme="cyberpunk"] textarea { color:#e7e9ff; background:#0c1022; border:1px solid #4a4c78; border-radius:2px; }
+    body[data-theme="cyberpunk"] .upload-box { background:#10182a; border-color:#00aabd; border-radius:2px; }
+    body[data-theme="cyberpunk"] .upload-copy strong, body[data-theme="cyberpunk"] .issue p b { color:#e7e9ff; }
+    body[data-theme="cyberpunk"] .situation, body[data-theme="cyberpunk"] .overall, body[data-theme="cyberpunk"] .issue p { color:#b4b8d7; }
+    body[data-theme="cyberpunk"] .highlight-box, body[data-theme="cyberpunk"] .issue, body[data-theme="cyberpunk"] .list-card { background:#0d1122; border-color:#34365c; color:#e7e9ff; }
+    body[data-theme="cyberpunk"] .grade-circle { color:#06111a; background:linear-gradient(135deg,#00e5ff,#5dffba); }
+    @media(max-width:650px) { .header-tools { gap:6px; flex-wrap:wrap; justify-content:flex-end; } #themeSelect { min-width:150px; max-width:190px; } .top-tag { display:none; } .upload-actions { align-items:flex-start; flex-direction:column; } }
+
   </style>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="brand-mark">W</span> WriteLab</div>
-    <div class="top-tag">AHS · English · B2 writing</div>
+    <div class="brand"><span class="brand-mark">K</span> KGB</div>
+    <div class="header-tools">
+      <label class="theme-label" for="themeSelect">Theme</label>
+      <select id="themeSelect" aria-label="Choose appearance theme">
+        <option value="default">Default · Facebook / iOS 4</option>
+        <option value="kawaii">Super kawaii Y2K</option>
+        <option value="aero">Frutiger Aero · Windows Vista</option>
+        <option value="cyberpunk">Cyberpunk</option>
+      </select>
+      <div class="top-tag">AHS · English · B2 writing</div>
+    </div>
   </header>
   <main>
     <section class="intro">
       <div>
         <p class="eyebrow">Your Matura writing gym</p>
         <h1>Write better.<br>One text at a time.</h1>
+        <p class="tagline">“definitely not vibecoded at all trust me I’m super smart and can write html code”</p>
         <p>Generate a realistic writing task, write your response, and get detailed feedback on content, structure, vocabulary and grammar.</p>
       </div>
       <div class="level-pill">8th class AHS · B2</div>
@@ -147,7 +298,7 @@
         <div class="panel-head">
           <div class="step">01 / Set up</div>
           <h2>Build an assignment</h2>
-          <p class="panel-sub">Choose a format or let WriteLab surprise you.</p>
+          <p class="panel-sub">Choose a format or let KGB surprise you.</p>
         </div>
         <div class="panel-body">
           <label class="field">
@@ -209,17 +360,18 @@
         <p class="panel-sub">Write directly here or paste a text you have already written.</p>
       </div>
       <div class="panel-body">
-        <label class="field" style="margin-bottom:15px">
-          <span class="field-label">Class access code</span>
-          <input id="classCode" type="password" autocomplete="off" placeholder="Enter the code your teacher shared" style="width:100%;border:1px solid #dedeea;border-radius:10px;padding:12px 13px;font:inherit">
-        </label>
         <div class="editor-meta">
           <span class="field-label" style="margin:0">Writing area</span>
           <span class="word-count"><strong id="wordCount">0</strong> words</span>
         </div>
         <textarea id="essayInput" maxlength="14000" spellcheck="true" placeholder="Start writing here…&#10;&#10;Tip: Make sure you address every bullet point in the assignment."></textarea>
+        <div class="upload-box">
+          <div class="upload-copy"><strong>Handwritten essay?</strong><span>Upload up to 5 clear page photos. KGB will transcribe them into editable text first.</span></div>
+          <input id="essayImages" type="file" accept="image/*" multiple aria-label="Upload photos of handwritten essay pages">
+          <div class="upload-actions"><span id="uploadInfo" class="small-note">JPG, PNG or HEIC photos · max. 5 pages</span><button class="secondary" id="transcribeBtn" type="button">Transcribe handwriting</button></div>
+        </div>
         <div class="editor-actions">
-          <div class="editor-hint">Your writing is sent to the AI service for feedback.<br>Do not include names or personal information.</div>
+          <div class="editor-hint">Your writing is sent to the configured AI service for feedback.<br>Do not include personal or sensitive information.</div>
           <button class="primary review-btn" id="reviewBtn">Review my writing ↗</button>
         </div>
         <div id="status" class="status" role="status"></div>
@@ -265,6 +417,21 @@
   let mode = 'practice';
   let currentAssignment = null;
   let latestCorrectedText = '';
+
+
+  // Theme preference is stored locally on this device.
+  const themeSelect = $('themeSelect');
+  function applyTheme(theme) {
+    const allowed = ['default','kawaii','aero','cyberpunk'];
+    const selected = allowed.includes(theme) ? theme : 'default';
+    document.body.dataset.theme = selected;
+    themeSelect.value = selected;
+    try { localStorage.setItem('kgb-theme', selected); } catch (_) {}
+  }
+  let savedTheme = 'default';
+  try { savedTheme = localStorage.getItem('kgb-theme') || 'default'; } catch (_) {}
+  applyTheme(savedTheme);
+  themeSelect.addEventListener('change', () => applyTheme(themeSelect.value));
 
   const topics = {
     school: [
@@ -460,6 +627,59 @@
     $('resultsPanel').scrollIntoView({ behavior:'smooth', block:'start' });
   }
 
+  async function imageFileToJpeg(file) {
+    // Convert phone photos (including HEIC where the browser supports it) to a compact JPEG.
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const img = new Image();
+      img.src = objectUrl;
+      await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = () => reject(new Error(`Could not open ${file.name}. Try saving it as JPG or PNG.`)); });
+      const maxSide = 1800;
+      const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.82));
+      if (!blob) throw new Error(`Could not process ${file.name}.`);
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(blob);
+      });
+      return String(dataUrl).split(',')[1];
+    } finally { URL.revokeObjectURL(objectUrl); }
+  }
+
+  async function transcribeHandwriting() {
+    const files = Array.from($('essayImages').files || []);
+    if (!files.length) { setStatus('Choose one or more photos of your handwritten pages first.', true); return; }
+    if (files.length > 5) { setStatus('Please upload no more than 5 page photos at a time.', true); return; }
+    const button = $('transcribeBtn');
+    button.disabled = true; button.textContent = 'Transcribing…';
+    setStatus('Reading the handwriting. This can take a little while for several pages.');
+    try {
+      const images = [];
+      for (const file of files) images.push({ mimeType:'image/jpeg', data: await imageFileToJpeg(file) });
+      const response = await fetch('/api/transcribe', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ images })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || `Transcription failed (${response.status}).`);
+      if (!payload.text || !payload.text.trim()) throw new Error('No readable handwriting was found. Try clearer, well-lit photos.');
+      const existing = $('essayInput').value.trim();
+      $('essayInput').value = existing ? existing + '\n\n' + payload.text.trim() : payload.text.trim();
+      updateWordCount();
+      setStatus('Transcription complete. Please check the text below, correct any misread words, and then request your review.');
+      $('essayInput').scrollIntoView({ behavior:'smooth', block:'center' });
+    } catch (error) {
+      setStatus(error.message || 'Unable to transcribe those images. Please try again.', true);
+    } finally {
+      button.disabled = false; button.textContent = 'Transcribe handwriting';
+    }
+  }
+
   async function reviewWriting() {
     const text = $('essayInput').value.trim();
     if (!currentAssignment) { setStatus('Generate an assignment first so the reviewer knows what you were asked to write.', true); return; }
@@ -471,7 +691,7 @@
     try {
       const response = await fetch('/api/review', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ text, assignment:currentAssignment, classCode:$('classCode').value.trim() })
+        body:JSON.stringify({ text, assignment:currentAssignment })
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || `Review failed (${response.status}).`);
@@ -480,7 +700,7 @@
       setStatus('Review complete. Use the corrections as a guide and try revising your original text.');
     } catch (error) {
       setStatus(error.message.includes('Failed to fetch')
-        ? 'WriteLab could not reach its review service. Please refresh the page and try again. If it keeps happening, tell your teacher.'
+        ? 'The AI review service is not running. Follow the README to start the local app and connect your API key.'
         : error.message, true);
     } finally {
       $('reviewBtn').disabled = false;
@@ -497,6 +717,11 @@
   $('generateBtn').addEventListener('click', generateAssignment);
   $('essayInput').addEventListener('input', updateWordCount);
   $('reviewBtn').addEventListener('click', reviewWriting);
+  $('transcribeBtn').addEventListener('click', transcribeHandwriting);
+  $('essayImages').addEventListener('change', () => {
+    const count = $('essayImages').files.length;
+    $('uploadInfo').textContent = count ? `${count} page photo${count === 1 ? '' : 's'} selected` : 'JPG, PNG or HEIC photos · max. 5 pages';
+  });
   $('copyCorrectedBtn').addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(latestCorrectedText); $('copyCorrectedBtn').textContent = 'Copied ✓'; setTimeout(() => $('copyCorrectedBtn').textContent = 'Copy corrected text', 1600); }
     catch { $('copyCorrectedBtn').textContent = 'Copy unavailable'; }
