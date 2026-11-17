@@ -5,9 +5,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 
+const groq = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1"
+});
 const PORT = Number(process.env.PORT || 3000);
-const API_KEY = process.env.GROQ_API_KEY;
-const MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
 const CLASS_ACCESS_CODE = process.env.CLASS_ACCESS_CODE || '';
 const PER_IP_HOURLY_LIMIT = Number(process.env.PER_IP_HOURLY_LIMIT || 100);
 const DAILY_REVIEW_LIMIT = Number(process.env.DAILY_REVIEW_LIMIT || 100);
