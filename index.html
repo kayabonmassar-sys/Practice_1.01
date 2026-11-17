@@ -82,6 +82,24 @@
     .status { display:none; margin-top:13px; border-radius:10px; background:#f0efff; color:#514bb9; padding:11px 13px; font-size:12px; line-height:1.5; }
     .status.show { display:block; }
     .status.error { background:#fff0f0; color:#a43c45; }
+
+    .review-progress { display:none; margin-top:13px; padding:13px 14px; border:1px solid #bfd0e5; border-radius:5px; background:#f5f8fc; color:#31547f; }
+    .review-progress.show { display:block; }
+    .progress-top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:9px; font-size:11px; font-weight:800; }
+    .progress-elapsed { font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .progress-track { height:9px; overflow:hidden; border-radius:99px; background:#e0e7f0; }
+    .progress-indicator { width:38%; height:100%; border-radius:99px; background:linear-gradient(90deg,#8bcf91,#3b5998); animation:kgb-progress 1.45s ease-in-out infinite; }
+    @keyframes kgb-progress { 0% { transform:translateX(-110%); } 100% { transform:translateX(290%); } }
+    .progress-hint { margin:8px 0 0; color:#66758a; font-size:10px; line-height:1.45; }
+    body[data-theme="kawaii"] .review-progress { background:#fff4fc; border-color:#efcce8; color:#a94b91; }
+    body[data-theme="kawaii"] .progress-track { background:#f5dff0; }
+    body[data-theme="kawaii"] .progress-indicator { background:linear-gradient(90deg,#f6a9d9,#9cccf5); }
+    body[data-theme="aero"] .review-progress { background:rgba(230,250,252,.85); border-color:#8bbfce; color:#24647a; }
+    body[data-theme="aero"] .progress-indicator { background:linear-gradient(90deg,#8de0df,#4aaf8b); }
+    body[data-theme="cyberpunk"] .review-progress { background:#10182a; border-color:#00aabd; color:#83f4ff; }
+    body[data-theme="cyberpunk"] .progress-track { background:#242943; }
+    body[data-theme="cyberpunk"] .progress-indicator { background:linear-gradient(90deg,#00e5ff,#ff4fd8); }
+
     .results { display:none; margin-top:20px; }
     .results.show { display:block; }
     .results-head { padding:22px 23px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:16px; }
@@ -302,10 +320,10 @@
     <div class="header-tools">
       <label class="theme-label" for="themeSelect">Theme</label>
       <select id="themeSelect" aria-label="Choose appearance theme">
-        <option value="default">Default</option>
-        <option value="kawaii">Kawaii</option>
-        <option value="aero">Niche Frutiger Aero</option>
-        <option value="cyberpunk">Samurai</option>
+        <option value="default">Default · Facebook / iOS 4</option>
+        <option value="kawaii">Super kawaii Y2K</option>
+        <option value="aero">Frutiger Aero · Windows Vista</option>
+        <option value="cyberpunk">Cyberpunk</option>
       </select>
       <div class="top-tag">AHS · English · B2 writing</div>
     </div>
@@ -313,10 +331,10 @@
   <main>
     <section class="intro">
       <div>
-        <p class="eyebrow">Kaya's grates Bildungsbegleiter</p>
-        <h1>Appease the system.<br>One text at a time.</h1>
-        <p class="tagline">I made this all by myself. Why would I deceive you?</p>
-        <p>Generate a realistic writing task, write your response, and get detailed feedback on content, structure, vocabulary and grammar. -GLG Kaya :P</p>
+        <p class="eyebrow">Your Matura writing gym</p>
+        <h1>Write better.<br>One text at a time.</h1>
+        <p class="tagline">“definitely not vibecoded at all trust me I’m super smart and can write html code”</p>
+        <p>Generate a realistic writing task, write your response, and get detailed feedback on content, structure, vocabulary and grammar.</p>
       </div>
       <div class="level-pill">8th class AHS · B2</div>
     </section>
@@ -403,6 +421,11 @@
           <button class="primary review-btn" id="reviewBtn">Review my writing ↗</button>
         </div>
         <div id="status" class="status" role="status"></div>
+        <div id="reviewProgress" class="review-progress" role="status" aria-live="polite" aria-hidden="true">
+          <div class="progress-top"><span id="progressMessage">KGB is reviewing your writing…</span><span class="progress-elapsed" id="progressElapsed">00:00 elapsed</span></div>
+          <div class="progress-track" role="progressbar" aria-label="AI review in progress"><div class="progress-indicator"></div></div>
+          <p class="progress-hint" id="progressHint">Response times vary depending on the AI service and current demand. Please keep this page open while the review runs.</p>
+        </div>
       </div>
     </section>
 
@@ -622,6 +645,34 @@
     $('status').className = 'status show' + (error ? ' error' : '');
   }
 
+  let reviewProgressTimer = null;
+  let reviewStartedAt = 0;
+  function startReviewProgress() {
+    stopReviewProgress();
+    const panel = $('reviewProgress');
+    reviewStartedAt = Date.now();
+    panel.classList.add('show');
+    panel.setAttribute('aria-hidden', 'false');
+    const update = () => {
+      const elapsed = Math.floor((Date.now() - reviewStartedAt) / 1000);
+      const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0');
+      const seconds = String(elapsed % 60).padStart(2, '0');
+      $('progressElapsed').textContent = `${minutes}:${seconds} elapsed`;
+      if (elapsed < 8) $('progressMessage').textContent = 'Sending your writing securely…';
+      else if (elapsed < 35) $('progressMessage').textContent = 'The AI is assessing your writing…';
+      else $('progressMessage').textContent = 'Still working — the AI is preparing your feedback…';
+      if (elapsed >= 60) $('progressHint').textContent = 'This is taking longer than usual. Please keep this page open; if the request fails, you can safely try again.';
+    };
+    update();
+    reviewProgressTimer = setInterval(update, 1000);
+  }
+  function stopReviewProgress() {
+    if (reviewProgressTimer) clearInterval(reviewProgressTimer);
+    reviewProgressTimer = null;
+    const panel = $('reviewProgress');
+    if (panel) { panel.classList.remove('show'); panel.setAttribute('aria-hidden', 'true'); }
+  }
+
   function renderTextWithHighlights(text, issues) {
     const root = $('highlightedText');
     root.replaceChildren();
@@ -763,8 +814,9 @@
     if (countWords(text) < 35) { setStatus('Please add a little more writing before requesting a review (at least 35 words).', true); return; }
     $('reviewBtn').disabled = true;
     $('reviewBtn').textContent = 'Reviewing…';
-    setStatus('Your text is being assessed against the task and the B2 writing criteria.');
     $('resultsPanel').classList.remove('show');
+    $('status').className = 'status';
+    startReviewProgress();
     try {
       const response = await fetch('/api/review', {
         method:'POST', headers:{'Content-Type':'application/json'},
@@ -776,10 +828,12 @@
       renderResults(payload.review, text);
       setStatus('Review complete. Use the corrections as a guide and try revising your original text.');
     } catch (error) {
-      setStatus(error.message.includes('Failed to fetch')
-        ? 'The AI review service is not running. Follow the README to start the local app and connect your API key.'
-        : error.message, true);
+      const message = error.message.includes('Failed to fetch')
+        ? 'Could not reach the KGB server. Check your connection and try again.'
+        : error.message;
+      setStatus(message, true);
     } finally {
+      stopReviewProgress();
       $('reviewBtn').disabled = false;
       $('reviewBtn').textContent = 'Review my writing ↗';
     }

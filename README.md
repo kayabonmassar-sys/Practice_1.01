@@ -12,6 +12,8 @@ KGB is a browser-based English writing practice app for 8th-class AHS students. 
 - Theme choice is saved locally in the user's browser.
 - Optional class password window: when `CLASS_ACCESS_CODE` is set on Render, students must enter the teacher-provided code before using KGB. The code is checked by the server and is sent with both transcription and review requests.
 - Handwritten essay upload: choose up to five page photos, transcribe them into editable text, proofread the transcription, and then submit it for the usual review.
+- Review progress indicator: shows an animated activity bar and live elapsed time while the AI grades a text. It does not invent a completion percentage because AI response times vary.
+- Temporary Gemini overload/rate-limit responses are retried automatically up to two times with a short wait between attempts. The app then displays a clearer message if the service is still busy.
 - The transcription step preserves the student's original language and wording; it does not translate or correct the essay.
 
 ## Deploy / update on Render
@@ -34,6 +36,13 @@ Keep the existing Render environment variables, especially `GEMINI_API_KEY`, `GE
 - `PER_IP_HOURLY_LIMIT`: optional, defaults to 5 AI requests per IP per hour.
 
 No extra npm packages are required. Node.js 20+ is required.
+
+## AI availability and review progress
+
+- A grading request can take longer when Gemini is busy. KGB displays an animated progress indicator and elapsed time; it cannot know the exact remaining time.
+- For temporary Gemini overload or rate-limit responses, the server retries automatically twice. Repeated failures produce a message asking the student to wait and try again.
+- If the message mentions an API quota or billing limit, a teacher/adult should check the Gemini API project usage, quota and billing settings. Repeated retries cannot fix an exhausted quota.
+- KGB keeps the configured `GEMINI_MODEL` unchanged. The model must be available to the configured API key.
 
 ## Handwriting upload notes
 

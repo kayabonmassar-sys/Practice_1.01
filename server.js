@@ -69,22 +69,24 @@ const server = http.createServer(async (req, res) => {
         }
         parts.push({ inlineData: { mimeType: image.mimeType, data: image.data } });
       }
-      const apiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`, {
-        method: 'POST',
-        headers: { 'x-goog-api-key': API_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { temperature: 0.1, maxOutputTokens: 7000 } })
-      });
-      const apiData = await apiResponse.json().catch(() => ({}));
+      const { response: apiResponse, data: apiData } = await fetchGeminiWithRetry(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`,
+        { contents: [{ role: 'user', parts }], generationConfig: { temperature: 0.1, maxOutputTokens: 7000 } }
+      );
       if (!apiResponse.ok) {
-        const detail = apiData.error && apiData.error.message ? apiData.error.message : `Gemini transcription failed (${apiResponse.status}).`;
-        return sendJson(res, 502, { error: detail });
+        const failure = describeGeminiFailure(apiResponse.status, apiData, 'transcription');
+        return sendJson(res, failure.status, { error: failure.message });
       }
       const text = getOutputText(apiData);
       if (!text) return sendJson(res, 502, { error: 'Gemini could not read any text from those photos. Try clearer, well-lit pictures.' });
       return sendJson(res, 200, { text });
     } catch (error) {
-      const status = error && error.message === 'Request body too large' ? 413 : 400;
-      return sendJson(res, status, { error: error.message || 'Unable to transcribe the page photos.' });
+      const status = error && error.message === 'Request body too large' ? 413
+        : (error && (error.name === 'TimeoutError' || error.name === 'AbortError' || error.name === 'TypeError') ? 503 : 400);
+      const message = status === 503
+        ? 'The AI service could not be reached or took too long to respond. Please wait a moment and try again.'
+        : (error.message || 'Unable to transcribe the page photos.');
+      return sendJson(res, status, { error: message });
     }
   }
 
@@ -145,19 +147,17 @@ ${JSON.stringify(assignment, null, 2)}
 STUDENT TEXT:
 ${essay}`;
 
-      const apiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`, {
-        method: 'POST',
-        headers: { 'x-goog-api-key': API_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { response: apiResponse, data: apiData } = await fetchGeminiWithRetry(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`,
+        {
           systemInstruction: { parts: [{ text: systemPrompt }] },
           contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
           generationConfig: { responseMimeType: 'application/json', temperature: 0.2, maxOutputTokens: 6500 }
-        })
-      });
-      const apiData = await apiResponse.json().catch(() => ({}));
+        }
+      );
       if (!apiResponse.ok) {
-        const detail = apiData.error && apiData.error.message ? apiData.error.message : `Gemini API request failed (${apiResponse.status}).`;
-        return sendJson(res, 502, { error: detail });
+        const failure = describeGeminiFailure(apiResponse.status, apiData, 'review');
+        return sendJson(res, failure.status, { error: failure.message });
       }
       const outputText = getOutputText(apiData);
       if (!outputText) return sendJson(res, 502, { error: 'Gemini returned an empty review. Please try again.' });
@@ -167,8 +167,12 @@ ${essay}`;
       }
       return sendJson(res, 200, { review });
     } catch (error) {
-      const status = error && error.message === 'Request body too large' ? 413 : 400;
-      return sendJson(res, status, { error: error.message || 'Unable to process the review request.' });
+      const status = error && error.message === 'Request body too large' ? 413
+        : (error && (error.name === 'TimeoutError' || error.name === 'AbortError' || error.name === 'TypeError') ? 503 : 400);
+      const message = status === 503
+        ? 'The AI service could not be reached or took too long to respond. Please wait a moment and try again.'
+        : (error.message || 'Unable to process the review request.');
+      return sendJson(res, status, { error: message });
     }
   }
 
@@ -177,6 +181,44 @@ ${essay}`;
   }
   sendJson(res, 404, { error: 'Not found' });
 });
+
+
+// Retry temporary Gemini overload/rate-limit responses before returning an error to the app.
+// The class/device rate limit is counted once per user request, not once per retry.
+async function fetchGeminiWithRetry(endpoint, payload) {
+  const retryable = new Set([429, 500, 502, 503, 504]);
+  const delays = [1200, 3000];
+  let lastResponse;
+  let lastData = {};
+  for (let attempt = 0; attempt <= delays.length; attempt += 1) {
+    lastResponse = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'x-goog-api-key': API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(90000)
+    });
+    lastData = await lastResponse.json().catch(() => ({}));
+    if (lastResponse.ok || !retryable.has(lastResponse.status) || attempt === delays.length) break;
+    const retryAfter = Number(lastResponse.headers.get('retry-after'));
+    const waitMs = Number.isFinite(retryAfter) && retryAfter > 0
+      ? Math.min(retryAfter * 1000, 10000)
+      : delays[attempt];
+    await new Promise(resolve => setTimeout(resolve, waitMs));
+  }
+  return { response: lastResponse, data: lastData };
+}
+
+function describeGeminiFailure(status, data, task) {
+  const detail = data && data.error && data.error.message ? String(data.error.message) : '';
+  const lower = detail.toLowerCase();
+  if (status === 429 || status === 503 || status === 504 || status === 500 || status === 502) {
+    if (/(billing|payment|per day|daily quota|limit: 0|quota.*exceeded)/i.test(detail) && !/(per minute|per second|retry in)/i.test(detail)) {
+      return { status: 503, message: 'The Gemini API quota or billing limit has been reached. Please ask your teacher to check the API usage and billing settings in the server account.' };
+    }
+    return { status: 503, message: `The AI service is busy right now, even after a few automatic retries. Your ${task === 'review' ? 'writing' : 'photos'} have not been graded/transcribed yet. Please wait a minute and try again. If this keeps happening, ask your teacher to check the Gemini API status and usage limits.` };
+  }
+  return { status: 502, message: detail || `The AI service could not complete the ${task}. Please try again.` };
+}
 
 function safeEqual(a, b) {
   const left = Buffer.from(a);
